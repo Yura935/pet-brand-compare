@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Порівняння брендів</title>
+    <link rel="stylesheet" href="/style.css?v=3" />
+  </head>
+  <body>
+    <main>
+      <h1>Порівняння брендів</h1>
+      <p class="lead">Petslike і Pethouse. Одна картка товару — один статус.</p>
+      <div class="actions">
+        <button id="analyze" type="button">Аналізувати сайти</button>
+        <button id="download" type="button" disabled>Завантажити xlsx</button>
+      </div>
+      <div class="progress" aria-hidden="true">
+        <div id="bar"></div>
+      </div>
+      <div class="info">
+        <p id="percent">0%</p>
+        <p id="status"></p>
+      </div>
+
+      <p id="warning" class="warning"></p>
+      <div class="tabs" role="tablist">
+        <button
+          id="tab-main"
+          class="tab active"
+          type="button"
+          role="tab"
+          aria-selected="true"
+        >
+          Main
+        </button>
+        <button
+          id="tab-issues"
+          class="tab"
+          type="button"
+          role="tab"
+          aria-selected="false"
+        >
+          Issues
+        </button>
+      </div>
+      <div id="panel-main" class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Бренд</th>
+              <th>Petslike в наявності</th>
+              <th>Petslike немає</th>
+              <th>Petslike знято</th>
+              <th>Pethouse в наявності</th>
+              <th>Pethouse немає</th>
+              <th>Pethouse знято</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <div id="panel-issues" class="hidden">
+        <div class="controls">
+          <div class="filters">
+            <label
+              >Type
+              <select id="filter-type">
+                <option value="">Усі</option>
+                <option value="warn">warn</option>
+                <option value="error">error</option>
+              </select></label
+            >
+            <label
+              >Статус
+              <select id="filter-status">
+                <option value="">Усі</option>
+              </select></label
+            >
+            <label
+              >Товар
+              <input
+                id="filter-url"
+                type="search"
+                placeholder="Пошук посилання"
+            /></label>
+          </div>
+          <div class="actions">
+            <button id="download-issues" type="button" disabled>
+              Завантажити xlsx
+            </button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>
+                  <button
+                    class="sort"
+                    type="button"
+                    data-sort="level"
+                    data-label="Type"
+                  >
+                    Type
+                  </button>
+                </th>
+                <th>
+                  <button
+                    class="sort"
+                    type="button"
+                    data-sort="status"
+                    data-label="Статус"
+                  >
+                    Статус
+                  </button>
+                </th>
+                <th>
+                  <button
+                    class="sort"
+                    type="button"
+                    data-sort="url"
+                    data-label="Товар"
+                  >
+                    Товар
+                  </button>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="issues"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+    <script src="/app.js?v=3"></script>
+  </body>
+</html>

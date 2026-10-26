@@ -1,0 +1,198 @@
+:root {
+  color: #1c1915;
+  background: #f4f0e8;
+  font-family: "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 20px 48px;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 32px;
+}
+
+.lead {
+  margin: 0 0 20px;
+  color: #5c564c;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+button {
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font: inherit;
+  cursor: pointer;
+}
+
+#analyze {
+  background: #245c45;
+  color: #fff;
+}
+
+#download,
+#download-issues {
+  background: #fff;
+  color: #245c45;
+  box-shadow: inset 0 0 0 1px #245c45;
+}
+
+button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.progress {
+  height: 10px;
+  background: #ddd6c8;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+#bar {
+  height: 100%;
+  width: 0;
+  background: #245c45;
+}
+
+#percent {
+  font-weight: 700;
+}
+
+#status {
+  min-height: 1.2em;
+}
+
+.warning {
+  color: #8a4b12;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tab {
+  background: transparent;
+  color: #5c564c;
+  border-radius: 8px 8px 0 0;
+  box-shadow: inset 0 -2px 0 #ddd6c8;
+}
+
+.tab.active {
+  color: #245c45;
+  font-weight: 700;
+  box-shadow: inset 0 -2px 0 #245c45;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #5c564c;
+  font-size: 14px;
+}
+
+.filters select,
+.filters input {
+  min-width: 180px;
+  border: 1px solid #ddd6c8;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  color: #1c1915;
+  background: #fff;
+}
+
+.sort {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font-weight: 700;
+}
+
+.sort.active {
+  color: #245c45;
+}
+
+.hidden {
+  display: none;
+}
+
+.table-wrap {
+  overflow: auto;
+  max-height: 70vh;
+  background: #fff;
+  border-radius: 12px;
+}
+
+.status-warn {
+  color: #8a4b12;
+  font-weight: 700;
+}
+
+.status-error {
+  color: #9b2c2c;
+  font-weight: 700;
+}
+
+td a {
+  color: #245c45;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee6da;
+  text-align: left;
+  white-space: nowrap;
+}
+
+th {
+  position: sticky;
+  top: 0;
+  background: #fff8ee;
+}
+
+.info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+
+  p {
+    margin: 0;
+  }
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
