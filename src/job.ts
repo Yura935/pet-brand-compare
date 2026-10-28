@@ -5,6 +5,8 @@ import { MissingPageError, readPethouse, sleep } from "./browser.js";
 import { classifyPetslike, classifyPethouse } from "./classify.js";
 import { parsePetslikeBrands, parsePethouseBrands, parseSitemapLocs, pethouseProductUrls, petslikeProductUrls } from "./lists.js";
 import { addIssue, errorMessage, issuesFromLog, log, rememberIssues } from "./log.js";
+import { photoHasRussian } from "./photo.js";
+import { hasRussian, pageText, productPhotoUrl } from "./russian.js";
 import type { AliasGroup, Issue, Job, PublicJob, PublicSite, ReadText, Site } from "./types.js";
 import { writeWorkbook } from "./xlsx.js";
 
@@ -213,6 +215,7 @@ async function readCard(job: Job, site: Site, url: string, readText: ReadText, g
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
       const html = await readText(url);
+      await reportRussian(url, html);
       const names = siteBrandNames(job.rows, site);
       const result = site === "petslike" ? classifyPetslike(html, names) : classifyPethouse(html, names);
       if (!result.brand) {
@@ -234,6 +237,13 @@ async function readCard(job: Job, site: Site, url: string, readText: ReadText, g
   }
   job.skipped += 1;
   log("WARN", `Пропущено ${url}: ${errorMessage(lastError)}`);
+}
+
+// Пише в журнал, якщо на сторінці або на фото товару є російська.
+async function reportRussian(url: string, html: string): Promise<void> {
+  if (hasRussian(pageText(html))) log("WARN", `Російська мова на сторінці: ${url}`);
+  const photo = productPhotoUrl(html, url);
+  if (photo && await photoHasRussian(photo)) log("WARN", `Російська мова на фото: ${url}`);
 }
 
 // Записує xlsx після повного проходу карток.
