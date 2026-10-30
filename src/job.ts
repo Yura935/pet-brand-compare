@@ -4,9 +4,8 @@ import { addCard, buildRows, loadAliases, mergeRows, siteBrandNames } from "./br
 import { MissingPageError, readPethouse, sleep } from "./browser.js";
 import { classifyPetslike, classifyPethouse } from "./classify.js";
 import { parsePetslikeBrands, parsePethouseBrands, parseSitemapLocs, pethouseProductUrls, petslikeProductUrls } from "./lists.js";
-import { addIssue, errorMessage, issuesFromLog, log, rememberIssues } from "./log.js";
-import { photoHasRussian } from "./photo.js";
-import { hasRussian, pageText, productPhotoUrl } from "./russian.js";
+import { addIssue, clearLog, errorMessage, issuesFromLog, log, rememberIssues } from "./log.js";
+import { pageText, russianHit } from "./russian.js";
 import type { AliasGroup, Issue, Job, PublicJob, PublicSite, ReadText, Site } from "./types.js";
 import { writeWorkbook } from "./xlsx.js";
 
@@ -24,6 +23,8 @@ const URLS = {
 
 let current: Job | null = null;
 let running = false;
+let pauseRequested = false;
+let resetRequested = false;
 let issues: Issue[] = [];
 let issuesLoaded = false;
 
@@ -42,12 +43,36 @@ export function getJob(): Job | null {
 // Починає новий збір і прибирає попередній результат з екрана.
 export function startJob(readText: ReadText): Job {
   if (running && current) return current;
+  const existing = current || loadJob();
+  if (existing?.status === "paused") return existing;
   issues = [];
   issuesLoaded = true;
+  clearLog();
   current = emptyJob();
   saveJob(current);
   void execute(readText);
   return current;
+}
+
+// Зупиняє збір після поточної пачки карток і лишає прогрес.
+export function stopJob(): Job {
+  const job = current || loadJob() || emptyJob();
+  current = job;
+  if (!running || job.status !== "running") return job;
+  pauseRequested = true;
+  job.statusLine = "Зупиняю…";
+  return job;
+}
+
+// Скидає прогрес. Якщо збір іде, чекає кінця поточної пачки.
+export function resetJob(): Job {
+  if (running) {
+    resetRequested = true;
+    pauseRequested = true;
+    if (current) current.statusLine = "Скидаю прогрес…";
+    return current || emptyJob();
+  }
+  return clearProgress();
 }
 
 // Продовжує збір з кроку, на якому він зупинився.
@@ -115,8 +140,11 @@ async function execute(readText: ReadText): Promise<void> {
   job.status = "running";
   try {
     if (!job.rows.length) await loadBrands(job, readText, groups);
+    if (stopRequested()) return;
     if (!job.urls) await loadLists(job, readText);
+    if (stopRequested()) return;
     await loadCards(job, readText, groups);
+    if (stopRequested()) return;
     await writeFile(job, groups);
     job.status = "done";
     job.percent = 100;
@@ -124,14 +152,43 @@ async function execute(readText: ReadText): Promise<void> {
     job.statusLine = job.warning ? `Готово. ${job.warning}` : "Готово";
     log("INFO", job.statusLine);
   } catch (error) {
+    if (stopRequested()) return;
     job.status = "error";
     job.error = errorMessage(error);
     job.statusLine = job.error;
     log("ERROR", job.error);
   } finally {
-    saveJob(job);
+    if (resetRequested) {
+      clearProgress();
+    } else if (pauseRequested && job.status !== "done") {
+      job.status = "paused";
+      job.error = null;
+      job.statusLine = job.processed ? `Зупинено. ${statusLine(job)}` : "Зупинено";
+      saveJob(job);
+      log("INFO", job.statusLine);
+    } else {
+      saveJob(job);
+    }
     running = false;
+    pauseRequested = false;
+    resetRequested = false;
   }
+}
+
+// Каже циклам карток вийти після поточної пачки.
+function stopRequested(): boolean {
+  return pauseRequested || resetRequested;
+}
+
+// Прибирає збережений збір, файл і список Issues.
+function clearProgress(): Job {
+  issues = [];
+  issuesLoaded = true;
+  clearLog();
+  current = emptyJob();
+  saveJob(current);
+  log("INFO", "Прогрес скинуто");
+  return current;
 }
 
 // Читає довідники брендів і одразу ставить Null для відсутніх.
@@ -162,10 +219,12 @@ async function loadLists(job: Job, readText: ReadText): Promise<void> {
   const indexXml = await readRequired(readPethouse, URLS.pethouseSitemap);
   const pethouseLocs: string[] = [];
   for (const sitemapUrl of parseSitemapLocs(indexXml)) {
+    if (stopRequested()) return;
     if (!/sobakam|koshkam|horkam|grizunam|rybam|pticam|reptiliyam/.test(sitemapUrl)) continue;
     const xml = await readRequired(readPethouse, sitemapUrl);
     pethouseLocs.push(...parseSitemapLocs(xml));
   }
+  if (stopRequested()) return;
   job.urls = {
     petslike: petslikeProductUrls(parseSitemapLocs(petslikeXml)),
     pethouse: pethouseProductUrls(pethouseLocs),
@@ -193,6 +252,7 @@ async function loadSite(job: Job, site: Site, readText: ReadText, groups: AliasG
   if (!urls) return;
   let sinceSave = 0;
   while (job.next[site] < urls[site].length) {
+    if (stopRequested()) return;
     const start = job.next[site];
     const batch = urls[site].slice(start, start + BATCH[site]);
     await Promise.all(batch.map((url) => readCard(job, site, url, readText, groups)));
@@ -239,11 +299,10 @@ async function readCard(job: Job, site: Site, url: string, readText: ReadText, g
   log("WARN", `Пропущено ${url}: ${errorMessage(lastError)}`);
 }
 
-// Пише в журнал, якщо на сторінці або на фото товару є російська.
-async function reportRussian(url: string, html: string): Promise<void> {
-  if (hasRussian(pageText(html))) log("WARN", `Російська мова на сторінці: ${url}`);
-  const photo = productPhotoUrl(html, url);
-  if (photo && await photoHasRussian(photo)) log("WARN", `Російська мова на фото: ${url}`);
+// Пише в журнал місце, якщо на сторінці товару є російська. Фото упаковки не перевіряється.
+function reportRussian(url: string, html: string): void {
+  const page = russianHit(pageText(html));
+  if (page) log("WARN", `Російська мова на сторінці: ${url} — ${page.snippet}`);
 }
 
 // Записує xlsx після повного проходу карток.
@@ -291,8 +350,10 @@ export function publicJob(job: Job | null): PublicJob {
     error: source.error || null,
     warning: source.warning || null,
     downloadEnabled: source.status === "done" && Boolean(source.xlsxPath),
-    analyzeEnabled: source.status !== "running",
+    analyzeEnabled: source.status === "idle" || source.status === "done" || source.status === "error",
     continueMode: source.status === "error",
+    stopping: pauseRequested && !resetRequested,
+    resetting: resetRequested,
     rows: mergeRows(source.rows || [], loadAliases(ALIASES_PATH)).map((row) => ({
       title: row.title,
       petslike: viewSite(row, "petslike"),

@@ -8,12 +8,13 @@ export type Issue = {
   level: "warn" | "error";
   status: string;
   url: string;
+  detail: string;
   message: string;
 };
 
 export type JobPhase = "brands" | "lists" | "cards" | "file";
 
-export type JobStatus = "idle" | "running" | "done" | "error";
+export type JobStatus = "idle" | "running" | "paused" | "done" | "error";
 
 export type SiteCounts = {
   onSite: boolean;
@@ -83,6 +84,8 @@ export type PublicJob = {
   downloadEnabled: boolean;
   analyzeEnabled: boolean;
   continueMode: boolean;
+  stopping: boolean;
+  resetting: boolean;
   rows: PublicRow[];
   issues: Issue[];
 };

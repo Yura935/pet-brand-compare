@@ -18,6 +18,12 @@ function localTimestamp(now: Date): string {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}.${pad(now.getMilliseconds(), 3)}${sign}${pad(Math.floor(Math.abs(offset) / 60))}:${pad(Math.abs(offset) % 60)}`;
 }
 
+// Очищає журнал, щоб новий збір не підтягнув старі Issues.
+export function clearLog(): void {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, "");
+}
+
 // Пише один рядок журналу в консоль і у файл data/app.log.
 export function log(level: Level, message: string): void {
   const line = `${localTimestamp(new Date())} ${level} ${message}`;
@@ -34,10 +40,12 @@ export function issueFromLine(line: string): Issue | null {
   const match = line.match(/ (WARN|ERROR) (.*)$/);
   if (!match || !match[1] || match[2] === undefined) return null;
   const message = match[2];
+  if (message.startsWith("Російська мова на фото")) return null;
   return {
     level: match[1] === "ERROR" ? "error" : "warn",
     status: issueStatus(message),
     url: productUrl(message),
+    detail: issueDetail(message, productUrl(message)),
     message,
   };
 }
@@ -47,6 +55,14 @@ function issueStatus(message: string): string {
   const url = productUrl(message);
   const head = url ? message.slice(0, message.indexOf(url)) : message.split(":")[0];
   return head.replace(/[:\s]+$/, "").trim() || message.trim();
+}
+
+// Повертає фрагмент речення після адреси, якщо журнал його записав.
+function issueDetail(message: string, url: string): string {
+  if (!url) return "";
+  const rest = message.slice(message.indexOf(url) + url.length);
+  const mark = rest.match(/^\s+—\s+(.*)$/);
+  return mark?.[1]?.trim() || "";
 }
 
 // Збирає унікальні warn і error з усього журналу.

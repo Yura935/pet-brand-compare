@@ -45,15 +45,41 @@ export function parsePethouseBrands(html: string): string[] {
   return [...names];
 }
 
-// Залишає адреси карток Petslike з карти товарів.
+// Залишає по одній адресі на товар Petslike.
 export function petslikeProductUrls(locs: string[]): string[] {
-  return [...new Set(locs.filter((url) => {
-    if (!url.includes("petslike.ua") || url.includes("/ru/")) return false;
-    return !/\/(category|brand|page|sitemap)\//.test(url);
-  }))];
+  const seen = new Set<string>();
+  const urls: string[] = [];
+  for (const url of locs) {
+    if (!url.includes("petslike.ua") || url.includes("/ru/")) continue;
+    if (/\/(category|brand|page|sitemap)\//.test(url)) continue;
+    const key = productPath(url);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    urls.push(url);
+  }
+  return urls;
 }
 
-// Залишає унікальні українські картки Pethouse.
+// Залишає по одній адресі на товар Pethouse, навіть якщо він є в кількох категоріях.
 export function pethouseProductUrls(locs: string[]): string[] {
-  return [...new Set(locs.filter(isPethouseProductUrl))];
+  const seen = new Set<string>();
+  const urls: string[] = [];
+  for (const url of locs) {
+    if (!isPethouseProductUrl(url)) continue;
+    const parts = new URL(url).pathname.split("/").filter(Boolean);
+    const key = parts.at(-1) || url;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    urls.push(url);
+  }
+  return urls;
+}
+
+// Повертає шлях адреси без хвоста зі слеша, щоб одна картка не рахувалась двічі.
+function productPath(url: string): string {
+  try {
+    return new URL(url).pathname.replace(/\/+$/, "") || url;
+  } catch {
+    return url;
+  }
 }

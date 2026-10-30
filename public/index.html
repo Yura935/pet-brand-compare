@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Порівняння брендів</title>
-    <link rel="stylesheet" href="/style.css?v=3" />
+    <link rel="stylesheet" href="/style.css?v=4" />
   </head>
   <body>
     <main>
@@ -12,6 +12,8 @@
       <p class="lead">Petslike і Pethouse. Одна картка товару — один статус.</p>
       <div class="actions">
         <button id="analyze" type="button">Аналізувати сайти</button>
+        <button id="toggle" type="button" disabled>Start</button>
+        <button id="reset" type="button" disabled>Reset</button>
         <button id="download" type="button" disabled>Завантажити xlsx</button>
       </div>
       <div class="progress" aria-hidden="true">
@@ -118,6 +120,16 @@
                   <button
                     class="sort"
                     type="button"
+                    data-sort="detail"
+                    data-label="Фрагмент"
+                  >
+                    Фрагмент
+                  </button>
+                </th>
+                <th>
+                  <button
+                    class="sort"
+                    type="button"
                     data-sort="url"
                     data-label="Товар"
                   >
@@ -131,6 +143,6 @@
         </div>
       </div>
     </main>
-    <script src="/app.js?v=3"></script>
+    <script src="/app.js?v=5"></script>
   </body>
 </html>

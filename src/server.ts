@@ -3,7 +3,7 @@ import http from "node:http";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import path from "node:path";
 import { openBrowser, readText } from "./browser.js";
-import { continueJob, getJob, publicJob, resumeIfNeeded, startJob, xlsxPath } from "./job.js";
+import { continueJob, getJob, publicJob, resetJob, resumeIfNeeded, startJob, stopJob, xlsxPath } from "./job.js";
 import { errorMessage, log } from "./log.js";
 import type { PublicJob } from "./types.js";
 import { issuesWorkbook } from "./xlsx.js";
@@ -23,6 +23,8 @@ const server = http.createServer((request: IncomingMessage, response: ServerResp
   if (url.pathname === "/api/job" && request.method === "GET") return sendJson(response, publicJob(getJob()));
   if (url.pathname === "/api/job/start" && request.method === "POST") return sendJson(response, publicJob(startJob(readText)));
   if (url.pathname === "/api/job/continue" && request.method === "POST") return sendJson(response, publicJob(continueJob(readText)));
+  if (url.pathname === "/api/job/stop" && request.method === "POST") return sendJson(response, publicJob(stopJob()));
+  if (url.pathname === "/api/job/reset" && request.method === "POST") return sendJson(response, publicJob(resetJob()));
   if (url.pathname === "/api/download" && request.method === "GET") return sendFile(response);
   if (url.pathname === "/api/download/issues" && request.method === "GET") {
     void sendIssues(response);

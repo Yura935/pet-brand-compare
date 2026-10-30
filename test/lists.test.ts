@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { isPethouseProductUrl, parsePetslikeBrands, parsePethouseBrands, petslikeProductUrls } from "../src/lists.js";
+import { isPethouseProductUrl, parsePetslikeBrands, parsePethouseBrands, pethouseProductUrls, petslikeProductUrls } from "../src/lists.js";
 
 test("картка Pethouse має шість частин шляху, категорія ні", () => {
   assert.equal(
@@ -30,4 +30,25 @@ test("список Petslike не бере російські адреси і к�
     "https://petslike.ua/category/sobaki",
   ]);
   assert.deepEqual(urls, ["https://petslike.ua/royal-canin"]);
+});
+
+test("один товар Pethouse з кількох категорій рахується один раз", () => {
+  const urls = pethouseProductUrls([
+    "https://pethouse.ua/ua/shop/sobakam/vitamini-i-dobavki/dolfos/dolfos-hepadol-mini/",
+    "https://pethouse.ua/ua/shop/sobakam/gastroenterologicheskiepreparaty/dolfos/dolfos-hepadol-mini/",
+    "https://pethouse.ua/ua/shop/koshkam/vitamini-i-dobavki/dolfos/dolfos-hepadol-mini/",
+    "https://pethouse.ua/ua/shop/koshkam/vitamini-i-dobavki/dolfos/dolfos-hepadol/",
+  ]);
+  assert.deepEqual(urls, [
+    "https://pethouse.ua/ua/shop/sobakam/vitamini-i-dobavki/dolfos/dolfos-hepadol-mini/",
+    "https://pethouse.ua/ua/shop/koshkam/vitamini-i-dobavki/dolfos/dolfos-hepadol/",
+  ]);
+});
+
+test("одна картка Petslike з різними хвостами адреси рахується один раз", () => {
+  const urls = petslikeProductUrls([
+    "https://petslike.ua/royal-canin/",
+    "https://petslike.ua/royal-canin?from=category",
+  ]);
+  assert.deepEqual(urls, ["https://petslike.ua/royal-canin/"]);
 });

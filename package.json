@@ -6,7 +6,7 @@
   "description": "Порівняння наявності брендів на Petslike і Pethouse",
   "scripts": {
     "start": "tsx src/server.ts",
-    "test": "node --import tsx --test test/brands.test.ts test/browser.test.ts test/classify.test.ts test/lists.test.ts test/log.test.ts test/russian.test.ts test/xlsx.test.ts",
+    "test": "node --import tsx --test test/brands.test.ts test/browser.test.ts test/classify.test.ts test/job.test.ts test/lists.test.ts test/log.test.ts test/russian.test.ts test/xlsx.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "engines": {

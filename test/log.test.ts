@@ -9,6 +9,23 @@ test("варнінг із адресою товару стає рядком Issu
   assert.equal(issue?.level, "warn");
   assert.equal(issue?.status, "Пропущено");
   assert.equal(issue?.url, "https://petslike.ua/lamb-brown-rice-junior-all-breeds");
+  assert.equal(issue?.detail, "");
+});
+
+test("російська на сторінці зберігає фрагмент", () => {
+  const issue = issueFromLine(
+    "2026-10-28T12:25:00.000+02:00 WARN Російська мова на сторінці: https://petslike.ua/adult-l — Это хороший корм",
+  );
+  assert.equal(issue?.status, "Російська мова на сторінці");
+  assert.equal(issue?.url, "https://petslike.ua/adult-l");
+  assert.equal(issue?.detail, "Это хороший корм");
+});
+
+test("російська на фото не потрапляє в Issues", () => {
+  const issue = issueFromLine(
+    "2026-10-28T12:25:00.000+02:00 WARN Російська мова на фото: https://petslike.ua/adult-l — Белый корм",
+  );
+  assert.equal(issue, null);
 });
 
 test("статус береться з тексту журналу", () => {

@@ -38,8 +38,8 @@ test("xlsx має два блоки по три рядки і не містит�
 
 test("xlsx Issues містить статус і посилання на товар", async () => {
   const body = await issuesWorkbook([
-    { level: "warn", status: "Немає бренду", url: "https://petslike.ua/apple", message: "Немає бренду: https://petslike.ua/apple" },
-    { level: "error", status: "Chrome не відкрився", url: "", message: "Chrome не відкрився" },
+    { level: "warn", status: "Немає бренду", url: "https://petslike.ua/apple", detail: "", message: "Немає бренду: https://petslike.ua/apple" },
+    { level: "error", status: "Chrome не відкрився", url: "", detail: "", message: "Chrome не відкрився" },
   ]);
   const filePath = path.join(os.tmpdir(), `pet-brand-issues-${Date.now()}.xlsx`);
   fs.writeFileSync(filePath, body);
@@ -49,10 +49,12 @@ test("xlsx Issues містить статус і посилання на тов�
   assert.ok(sheet);
   assert.equal(sheet.getCell("A1").value, "Type");
   assert.equal(sheet.getCell("B1").value, "Статус");
-  assert.equal(sheet.getCell("C1").value, "Товар");
+  assert.equal(sheet.getCell("C1").value, "Фрагмент");
+  assert.equal(sheet.getCell("D1").value, "Товар");
   assert.equal(sheet.getCell("A2").value, "warn");
   assert.equal(sheet.getCell("B2").value, "Немає бренду");
-  assert.deepEqual(sheet.getCell("C2").value, { text: "https://petslike.ua/apple", hyperlink: "https://petslike.ua/apple" });
+  assert.equal(sheet.getCell("C2").value, "");
+  assert.deepEqual(sheet.getCell("D2").value, { text: "https://petslike.ua/apple", hyperlink: "https://petslike.ua/apple" });
   assert.equal(sheet.getCell("A3").value, "error");
   assert.equal(sheet.getCell("B3").value, "Chrome не відкрився");
   fs.unlinkSync(filePath);

@@ -1,4 +1,6 @@
 const analyze = document.querySelector("#analyze");
+const toggle = document.querySelector("#toggle");
+const reset = document.querySelector("#reset");
 const download = document.querySelector("#download");
 const downloadIssues = document.querySelector("#download-issues");
 const bar = document.querySelector("#bar");
@@ -39,6 +41,19 @@ analyze.addEventListener("click", async () => {
   show(await response.json());
 });
 
+toggle.addEventListener("click", async () => {
+  const path = toggle.dataset.action === "stop" ? "/api/job/stop" : "/api/job/continue";
+  toggle.disabled = true;
+  const response = await fetch(path, { method: "POST" });
+  show(await response.json());
+});
+
+reset.addEventListener("click", async () => {
+  reset.disabled = true;
+  const response = await fetch("/api/job/reset", { method: "POST" });
+  show(await response.json());
+});
+
 download.addEventListener("click", () => {
   if (!download.disabled) window.location = "/api/download";
 });
@@ -49,9 +64,14 @@ downloadIssues.addEventListener("click", () => {
 
 // Малює стан збору на сторінці.
 function show(job) {
-  analyze.disabled = !job.analyzeEnabled;
+  analyze.disabled = !job.analyzeEnabled || job.stopping || job.resetting;
   analyze.textContent = job.continueMode ? "Продовжити" : "Аналізувати сайти";
   analyze.dataset.mode = job.continueMode ? "continue" : "start";
+  const running = job.status === "running";
+  toggle.textContent = running ? "Stop" : "Start";
+  toggle.dataset.action = running ? "stop" : "start";
+  toggle.disabled = job.stopping || job.resetting || !(running || job.status === "paused" || job.status === "error");
+  reset.disabled = job.stopping || job.resetting || job.status === "idle";
   download.disabled = !job.downloadEnabled;
   const value = job.percent || 0;
   bar.style.width = `${value}%`;
@@ -80,7 +100,7 @@ function renderIssues() {
   const visible = latestIssues.filter((issue) => {
     if (filterType.value && issue.level !== filterType.value) return false;
     if (filterStatus.value && issue.status !== filterStatus.value) return false;
-    const product = `${issue.url} ${issue.message}`.toLowerCase();
+    const product = `${issue.url} ${issue.detail} ${issue.message}`.toLowerCase();
     return !query || product.includes(query);
   });
   if (issueSort.key) {
@@ -100,7 +120,7 @@ function renderIssues() {
 function emptyIssues() {
   const line = document.createElement("tr");
   const cell = document.createElement("td");
-  cell.colSpan = 3;
+  cell.colSpan = 4;
   cell.textContent = "Нічого не знайдено";
   line.append(cell);
   return line;
@@ -145,10 +165,13 @@ function issueView(issue) {
   type.className = issue.level === "error" ? "status-error" : "status-warn";
   const status = document.createElement("td");
   status.textContent = issue.status;
+  const fragment = document.createElement("td");
+  fragment.className = "fragment";
+  fragment.textContent = issue.detail || "";
   const product = document.createElement("td");
   if (issue.url) {
     const link = document.createElement("a");
-    link.href = issue.url;
+    link.href = issueHref(issue);
     link.textContent = issue.url;
     link.target = "_blank";
     link.rel = "noopener";
@@ -156,8 +179,16 @@ function issueView(issue) {
   } else {
     product.textContent = issue.message;
   }
-  line.append(type, status, product);
+  line.append(type, status, fragment, product);
   return line;
+}
+
+// Для російської на сторінці відкриває товар на знайденому реченні.
+function issueHref(issue) {
+  if (!issue.detail || issue.status !== "Російська мова на сторінці") return issue.url;
+  const phrase = issue.detail.replace(/^…/, "").replace(/…$/, "").trim().slice(0, 80);
+  if (!phrase) return issue.url;
+  return `${issue.url}#:~:text=${encodeURIComponent(phrase)}`;
 }
 
 async function poll() {
