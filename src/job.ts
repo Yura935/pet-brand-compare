@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { addCard, buildRows, loadAliases, mergeRows, siteBrandNames } from "./brands.js";
-import { MissingPageError, readPethouse, sleep } from "./browser.js";
+import { MissingPageError, readPethouse, sleep, whenSecurityCheck } from "./browser.js";
 import { classifyPetslike, classifyPethouse } from "./classify.js";
 import { parsePetslikeBrands, parsePethouseBrands, parseSitemapLocs, pethouseProductUrls, petslikeProductUrls } from "./lists.js";
 import { addIssue, clearLog, errorMessage, issuesFromLog, log, rememberIssues } from "./log.js";
@@ -33,6 +33,11 @@ const LOG_PATH = path.join(DATA_DIR, "app.log");
 rememberIssues((issue) => {
   loadIssues();
   addIssue(issues, issue);
+});
+
+whenSecurityCheck((message) => {
+  if (current) current.statusLine = message;
+  log("INFO", message);
 });
 
 // Повертає поточний стан збору для екрана.
